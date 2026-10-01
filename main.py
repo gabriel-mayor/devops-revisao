@@ -18,17 +18,30 @@ LOGS = [
 def ler_evento(linha):
     """Transforma uma linha de log em um dicionário."""
     partes = linha.split()
-    # As três primeiras partes têm posição fixa: data, hora e status
     evento = {"data": partes[0], "hora": partes[1], "status": partes[2]}
-    # O resto são pares chave=valor. O 1 no split quebra só no primeiro "=",
-    # assim um valor que contenha "=" não estraga a leitura
     for par in partes[3:]:
         chave, valor = par.split("=", 1)
         evento[chave] = valor
     return evento
 
 
+def contar_falhas_por_ip(eventos):
+    """Conta quantas falhas de login cada IP teve. Percorre a lista uma vez: O(n)."""
+    contagem = {}
+    for evento in eventos:
+        if evento["status"] == "FALHA":
+            # get devolve 0 se o IP ainda não está no dicionário
+            contagem[evento["ip"]] = contagem.get(evento["ip"], 0) + 1
+    return contagem
+
+
+def detectar_suspeitos(contagem, limite=3):
+    """Retorna só os IPs que atingiram o limite de falhas."""
+    return {ip: total for ip, total in contagem.items() if total >= limite}
+
+
 if __name__ == "__main__":
-    for linha in LOGS:
-        evento = ler_evento(linha)
-        print(f"{evento['hora']} {evento['status']} {evento['usuario']} {evento['ip']}")
+    eventos = [ler_evento(linha) for linha in LOGS]
+    suspeitos = detectar_suspeitos(contar_falhas_por_ip(eventos))
+    for ip, total in suspeitos.items():
+        print(f"IP suspeito: {ip} ({total} falhas)")
