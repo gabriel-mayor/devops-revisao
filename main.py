@@ -39,9 +39,13 @@ def detectar_suspeitos(contagem, limite=3):
     """Retorna só os IPs que atingiram o limite de falhas."""
     return {ip: total for ip, total in contagem.items() if total >= limite}
 
+def formatar_alerta(ip, total):
+    """Monta a mensagem de alerta no padrão usado pelo relatório."""
+    return f"[ALERTA] Possível força bruta: {ip} com {total} falhas de login"
+
 
 if __name__ == "__main__":
     eventos = [ler_evento(linha) for linha in LOGS]
     suspeitos = detectar_suspeitos(contar_falhas_por_ip(eventos))
     for ip, total in suspeitos.items():
-        print(f"IP suspeito: {ip} ({total} falhas)")
+                print(formatar_alerta(ip, total))
